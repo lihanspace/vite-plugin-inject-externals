@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "esnext",
+    "esModuleInterop": true,
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "strictNullChecks": true,
+    "moduleResolution": "node"
+  },
+  "exclude": ["**/dist", "**/node_modules"]
+}
