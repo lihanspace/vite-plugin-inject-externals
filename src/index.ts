@@ -2,185 +2,191 @@ import { Plugin, HtmlTagDescriptor, UserConfig } from 'vite'
 import { GlobalsOption } from 'rollup'
 // @ts-ignore
 import externalGlobals from 'rollup-plugin-external-globals'
+
 export type DefaultInjectTo = 'head-prepend'
 export type OtherInjectTo = 'head' | 'body' | 'body-prepend'
 export type OptionalInjectTo = DefaultInjectTo | OtherInjectTo
 /**
- * @name InjectTo
- * @type InjectTo
- * 插入的位置
- * @default 'head-prepend' 插入到head标签开头
+ * Location of CDN link injection
+ * @default 'head-prepend' Inject at the prepend of the head tag
  * @example
- * 'head' - 插入到head标签末尾
- * 'body' - 插入到body标签末尾
- * 'head-prepend' - 插入到head标签开头
- * 'body-prepend' - 插入到body标签开头
- * string 自定义占位符 - 替换index.html中第一次匹配到的自定义占位符
- * 例如: '<!-- vite-plugin-insert-externals占位 -->'
+ * 'head' - Inject at the end of the head tag
+ * 'body' - Inject at the end of the head tag
+ * 'head-prepend' - Inject at the prepend of the head tag
+ * 'body-prepend' - Inject at the prepend of the body tag
+ * string - Custom placeholder - Replace the first matching custom placeholder in index.html
+ * e.g.: '<!-- Custom placeholder for vite plugin insert externals -->'
  * @description
- * InsertExternalsModule.injectTo的优先级比InsertExternalsConfig.injectTo的优先级高
+ * The injectTo priority is sorted from high to low: htmlTag > module > config
  */
 export type InjectTo = OptionalInjectTo | string
-/**
- * @namespace InsertExternalsModule
- * @property name 模块名
- * @property global 全局变量名
- * @property path cdn链接
- * @property injectTo 插入的位置
- * @property htmlTag 使用vite自带的htmlTag插入标签，path和injectTo将被覆盖
- */
-export type InsertExternalsModule = {
+export type InsertPathModule = {
   name?: string,
   global?: string,
-  path?: string,
-  injectTo?: InjectTo,
-  htmlTag?: HtmlTagDescriptor
+  path: string,
+  htmlTag?: never,
+  injectTo?: InjectTo
+}
+export type InsertHtmlTagModule = {
+  name?: string,
+  global?: string,
+  path?: never,
+  htmlTag: HtmlTagDescriptor,
+  injectTo?: InjectTo
+}
+export type OnlyGlobalName = {
+  name: string,
+  global: string,
+  path?: never,
+  htmlTag?: never,
+  injectTo?: never
 }
 /**
- * 参数配置
+ * @property name Module name
+ * @property global Global variable name
+ * @property path CDN link
+ * @property injectTo Location of CDN link injection
+ * @property htmlTag Inject tags with htmlTag provided by vite, and path will be overwritten
+ */
+export type InsertExternalsModule = InsertPathModule | InsertHtmlTagModule | OnlyGlobalName
+/**
+ * Inject HTML tag when running which command
+ * @default 'build'
+ * @example
+ * 'build' - when running build
+ * true - 'build' or 'serve'
+ */
+export type ConfigEnvCommand = 'build' | true
+/**
+ * @property command At what command does the plugin run
+ * @property injectTo Location of CDN link injection
+ * @property modules Module collection
  */
 export type InsertExternalsConfig = {
-  injectTo?: InjectTo
+  command?: ConfigEnvCommand
+  injectTo?: InjectTo,
   modules: InsertExternalsModule[]
 }
-const ErrorTitle = Symbol('ErrorTitle')
-/**
- * vite-plugin-inject-external的错误信息
- * @property {?string} message 错误信息
- * @property {?InsertExternalsModule} module 错误module
- */
-export class VitePluginInjectExternalsError extends Error {
-  [key: string | symbol]: any
-  [ErrorTitle] = 'vite-plugin-inject-externals Error'
-  constructor(err: { message?: string, [key: string]: any }) {
-    super()
-    for (const errKey in err) {
-      this[errKey] = err[errKey]
+
+const injectToRegExp = /^(head|body|head-prepend|body-prepend)$/
+
+const singleTags: string[] = ['br', 'hr', 'img', 'input', 'param', 'meta', 'link']
+const createTag = (htmlTag: HtmlTagDescriptor | HtmlTagDescriptor[] | string) => {
+  if (Array.isArray(htmlTag)) {
+    let scriptStr = ''
+    for (const htmlTagItem of htmlTag) {
+      scriptStr += createTag(htmlTagItem)
     }
+    return scriptStr
   }
-}
-const createTag = (tagName: string, attrs: Record<string, string | boolean | undefined>) => {
-  let scriptStr = `<${ tagName }`
+  if (typeof htmlTag === 'string') htmlTag = { tag: htmlTag }
+  const { tag, attrs, children } = htmlTag
+  let scriptStr = `<${ tag }`
   for (const attrsKey in attrs) {
     scriptStr += ` ${ attrsKey }="${ attrs[attrsKey] }"`
   }
-  scriptStr += `></${ tagName }>`
+  if (children) scriptStr += createTag(children)
+  scriptStr += `>`
+  if (!singleTags.includes(tag)) scriptStr += `</${ tag }>`
   return scriptStr
 }
+const initHtmlTag = (moduleInfo: InsertExternalsModule & { injectTo: string }): HtmlTagDescriptor => {
+  if (moduleInfo.htmlTag) return moduleInfo.htmlTag
+  let htmlTag: HtmlTagDescriptor
+  if (moduleInfo.name && moduleInfo.global) {
+    htmlTag = {
+      tag: 'script',
+      attrs: {
+        type: 'text/javascript',
+        src: moduleInfo.path
+      }
+    }
+  } else {
+    htmlTag = {
+      tag: 'link',
+      attrs: {
+        rel: 'stylesheet',
+        href: moduleInfo.path
+      }
+    }
+  }
+  if (injectToRegExp.test(moduleInfo.injectTo)) {
+    htmlTag.injectTo = moduleInfo.injectTo as OptionalInjectTo
+  }
+  return htmlTag
+}
 /**
- * [README.md](https://github.com/lihanspace/master/README.md)
- * @see [README.md](../README.md)
+ * see [README.md](https://github.com/lihanspace/vite-plugin-inject-externals/blob/master/README.md)
  */
 const insertExternals = (config: InsertExternalsConfig): Plugin => {
-  let { injectTo, modules } = config
+  let { command, injectTo, modules } = config
+  if (!command) command = 'build'
+  if (!injectTo) injectTo = 'head-prepend'
   if (!modules || !Array.isArray(modules)) {
     modules = []
   }
-  let isBuild = false
-  if (!injectTo) injectTo = 'head-prepend'
-  const injectToRegExp = /^(head|body|head-prepend|body-prepend)$/
-  // 处理module
+  let canIInject = command === true
+  // 字符串标签列表数据
   let strTagsData: Record<string, string[]> = {}
+  // 默认注入的标签列表
   let htmlTags: HtmlTagDescriptor[] = []
   // 模块和全局变量名
   let globalsOption: GlobalsOption = {}
+  // 自定义注入的模块
   let customModules: (InsertExternalsModule & { injectTo: string })[] = []
+  // 默认注入的模块
   let optionalModules: (InsertExternalsModule & { injectTo: OptionalInjectTo })[] = []
-  for (const item of modules) {
-    let moduleItem = { ...item, injectTo: item.injectTo || injectTo }
-    if (moduleItem.htmlTag || injectToRegExp.test(moduleItem.injectTo)) {
-      moduleItem = { ...moduleItem, injectTo: moduleItem.injectTo as OptionalInjectTo }
+  for (let moduleItem of modules) {
+    if (moduleItem.name && moduleItem.global) globalsOption[moduleItem.name] = moduleItem.global
+    if (!moduleItem.path && !moduleItem.htmlTag) continue
+    if (!moduleItem.injectTo) moduleItem.injectTo = injectTo
+    if (moduleItem.htmlTag?.injectTo) moduleItem.injectTo = moduleItem.htmlTag.injectTo
+    if (injectToRegExp.test(moduleItem.injectTo)) {
       optionalModules.push(moduleItem as InsertExternalsModule & { injectTo: OptionalInjectTo })
     } else {
-      customModules.push(moduleItem)
+      customModules.push(moduleItem as InsertExternalsModule & { injectTo: string })
     }
   }
   for (const customModule of customModules) {
-    if (!customModule.path) {
-      console.error(new VitePluginInjectExternalsError({ message: 'htmlTag和path至少存在一个', module: customModule }))
-      continue
-    }
+    let htmlTag = initHtmlTag(customModule)
     if (!Array.isArray(strTagsData[customModule.injectTo])) {
       strTagsData[customModule.injectTo] = []
     }
-    if (!customModule.name || !customModule.global) {
-      // css
-      strTagsData[customModule.injectTo].unshift(createTag('link', {
-        rel: 'stylesheet',
-        href: customModule.path
-      }))
+    if (htmlTag.tag === 'link') {
+      strTagsData[customModule.injectTo].unshift(createTag(htmlTag))
     } else {
-      // js
-      globalsOption[customModule.name] = customModule.global
-      strTagsData[customModule.injectTo].push(createTag('script', {
-        type: 'text/javascript',
-        src: customModule.path
-      }))
+      strTagsData[customModule.injectTo].push(createTag(htmlTag))
     }
   }
   for (const optionalModule of optionalModules) {
-    if (optionalModule.htmlTag) {
-      if (optionalModule.htmlTag.tag === 'link') {
-        htmlTags.unshift(optionalModule.htmlTag)
-      } else {
-        htmlTags.push(optionalModule.htmlTag)
-      }
-      continue
-    }
-    if (!optionalModule.path) {
-      console.error(new VitePluginInjectExternalsError({ message: 'htmlTag和path至少存在一个', module: optionalModule }))
-      continue
-    }
-    if (!optionalModule.name || !optionalModule.global) {
-      // css
-      htmlTags.unshift({
-        tag: 'link',
-        attrs: {
-          rel: 'stylesheet',
-          href: optionalModule.path
-        },
-        injectTo: optionalModule.injectTo as "head" | "body" | "head-prepend" | "body-prepend"
-      })
+    let htmlTag = initHtmlTag(optionalModule)
+    if (htmlTag.tag === 'link') {
+      htmlTags.unshift(htmlTag)
     } else {
-      // js
-      globalsOption[optionalModule.name] = optionalModule.global
-      htmlTags.push({
-        tag: 'script',
-        attrs: {
-          type: 'text/javascript',
-          src: optionalModule.path
-        },
-        injectTo: optionalModule.injectTo as "head" | "body" | "head-prepend" | "body-prepend"
-      })
+      htmlTags.push(htmlTag)
     }
   }
   return {
     name: 'vite-plugin-inject-externals',
-    config(uc, { command }) {
+    config(uc, { command: viteCommand }) {
       const userConfig: UserConfig = {
         build: {
           rollupOptions: {}
         }
       }
-
-      if (command === 'build') {
-        isBuild = true
-
+      if (viteCommand === 'build') {
+        canIInject = true
         userConfig.build!.rollupOptions = {
           // external: [...externalLibs],
           plugins: [externalGlobals(globalsOption)]
         }
-
-
-      } else {
-        isBuild = false
       }
-
       return userConfig
     },
     transformIndexHtml(html) {
+      let newHtml = html
       const pattern = /<head>\r?\n+\s*</
-      const execArr = pattern.exec(html)
+      const execArr = pattern.exec(newHtml)
       let spaceStr = ''
       if (execArr) {
         let [val] = execArr
@@ -189,11 +195,15 @@ const insertExternals = (config: InsertExternalsConfig): Plugin => {
       }
       let joinStr = spaceStr ? `\n${ spaceStr }` : '\n  '
       for (const key in strTagsData) {
-        html = html.replace(key, strTagsData[key].join(joinStr))
+        newHtml = newHtml.replace(key, strTagsData[key].join(joinStr))
       }
-      return {
-        html,
-        tags: htmlTags
+      if (canIInject) {
+        return {
+          html: newHtml,
+          tags: htmlTags
+        }
+      } else {
+        return html
       }
     }
   }
