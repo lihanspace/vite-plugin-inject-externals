@@ -7,7 +7,7 @@ export type DefaultInjectTo = 'head-prepend'
 export type OtherInjectTo = 'head' | 'body' | 'body-prepend'
 export type OptionalInjectTo = DefaultInjectTo | OtherInjectTo
 /**
- * Location of CDN link injection
+ * Location of HTML tags injection
  * @default 'head-prepend' Inject at the prepend of the head tag
  * @example
  * 'head' - Inject at the end of the head tag
@@ -15,40 +15,25 @@ export type OptionalInjectTo = DefaultInjectTo | OtherInjectTo
  * 'head-prepend' - Inject at the prepend of the head tag
  * 'body-prepend' - Inject at the prepend of the body tag
  * string - Custom placeholder - Replace the first matching custom placeholder in index.html
- * e.g.: '<!-- Custom placeholder for vite plugin insert externals -->'
+ * e.g.: '<!-- Custom placeholder for vite plugin inject externals -->'
  * @description
  * The injectTo priority is sorted from high to low: htmlTag > module > config
  */
 export type InjectTo = OptionalInjectTo | string
-export type InsertPathModule = {
-  name?: string,
-  global?: string,
-  path: string,
-  htmlTag?: never,
-  injectTo?: InjectTo
-}
-export type InsertHtmlTagModule = {
-  name?: string,
-  global?: string,
-  path?: never,
-  htmlTag: HtmlTagDescriptor,
-  injectTo?: InjectTo
-}
-export type OnlyGlobalName = {
-  name: string,
-  global: string,
-  path?: never,
-  htmlTag?: never,
-  injectTo?: never
-}
 /**
  * @property name Module name
  * @property global Global variable name
  * @property path CDN link
- * @property injectTo Location of CDN link injection
+ * @property injectTo Location of HTML tags injection
  * @property htmlTag Inject tags with htmlTag provided by vite, and path will be overwritten
  */
-export type InsertExternalsModule = InsertPathModule | InsertHtmlTagModule | OnlyGlobalName
+export type InjectExternalsModule = {
+  name?: string,
+  global?: string,
+  path?: string,
+  htmlTag?: HtmlTagDescriptor,
+  injectTo?: InjectTo
+}
 /**
  * Inject HTML tag when running which command
  * @default 'build'
@@ -58,14 +43,14 @@ export type InsertExternalsModule = InsertPathModule | InsertHtmlTagModule | Onl
  */
 export type ConfigEnvCommand = 'build' | true
 /**
- * @property command At what command does the plugin run
- * @property injectTo Location of CDN link injection
+ * @property command Inject HTML tag when running which command
+ * @property injectTo Location of HTML tags injection
  * @property modules Module collection
  */
-export type InsertExternalsConfig = {
+export type InjectExternalsConfig = {
   command?: ConfigEnvCommand
   injectTo?: InjectTo,
-  modules: InsertExternalsModule[]
+  modules: InjectExternalsModule[]
 }
 
 const injectToRegExp = /^(head|body|head-prepend|body-prepend)$/
@@ -90,7 +75,7 @@ const createTag = (htmlTag: HtmlTagDescriptor | HtmlTagDescriptor[] | string) =>
   if (!singleTags.includes(tag)) scriptStr += `</${ tag }>`
   return scriptStr
 }
-const initHtmlTag = (moduleInfo: InsertExternalsModule & { injectTo: string }): HtmlTagDescriptor => {
+const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): HtmlTagDescriptor => {
   if (moduleInfo.htmlTag) return moduleInfo.htmlTag
   let htmlTag: HtmlTagDescriptor
   if (moduleInfo.name && moduleInfo.global) {
@@ -115,10 +100,7 @@ const initHtmlTag = (moduleInfo: InsertExternalsModule & { injectTo: string }): 
   }
   return htmlTag
 }
-/**
- * see [README.md](https://github.com/lihanspace/vite-plugin-inject-externals/blob/master/README.md)
- */
-const insertExternals = (config: InsertExternalsConfig): Plugin => {
+const injectExternals = (config: InjectExternalsConfig): Plugin => {
   let { command, injectTo, modules } = config
   if (!command) command = 'build'
   if (!injectTo) injectTo = 'head-prepend'
@@ -133,18 +115,18 @@ const insertExternals = (config: InsertExternalsConfig): Plugin => {
   // 模块和全局变量名
   let globalsOption: GlobalsOption = {}
   // 自定义注入的模块
-  let customModules: (InsertExternalsModule & { injectTo: string })[] = []
+  let customModules: (InjectExternalsModule & { injectTo: string })[] = []
   // 默认注入的模块
-  let optionalModules: (InsertExternalsModule & { injectTo: OptionalInjectTo })[] = []
+  let optionalModules: (InjectExternalsModule & { injectTo: OptionalInjectTo })[] = []
   for (let moduleItem of modules) {
     if (moduleItem.name && moduleItem.global) globalsOption[moduleItem.name] = moduleItem.global
     if (!moduleItem.path && !moduleItem.htmlTag) continue
     if (!moduleItem.injectTo) moduleItem.injectTo = injectTo
     if (moduleItem.htmlTag?.injectTo) moduleItem.injectTo = moduleItem.htmlTag.injectTo
     if (injectToRegExp.test(moduleItem.injectTo)) {
-      optionalModules.push(moduleItem as InsertExternalsModule & { injectTo: OptionalInjectTo })
+      optionalModules.push(moduleItem as InjectExternalsModule & { injectTo: OptionalInjectTo })
     } else {
-      customModules.push(moduleItem as InsertExternalsModule & { injectTo: string })
+      customModules.push(moduleItem as InjectExternalsModule & { injectTo: string })
     }
   }
   for (const customModule of customModules) {
@@ -208,4 +190,4 @@ const insertExternals = (config: InsertExternalsConfig): Plugin => {
     }
   }
 }
-export default insertExternals
+export default injectExternals

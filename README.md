@@ -4,7 +4,7 @@
 
 When vite is packaged, the specified module is imported from CDN instead.
 
-Script tag and link tag can be inserted into the specified location.
+Script tag and link tag can be injected into the specified location.
 
 Reduce build time and increase page load speed in production environments.
 
@@ -37,14 +37,15 @@ import injectExterbals from 'vite-plugin-inject-externals'
 export default {
   plugins: [
     injectExterbals({
-      // 默认 'head-prepend'
-      injectTo: '<!-- Custom placeholder for vite plugin insert externals -->',
+      // Default value: 'head-prepend'
+      // The custom injection location will replace the corresponding text in index.html
+      injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
       modules: [
         {
           name: 'vue',
           global: 'Vue',
           path: 'https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js'
-          // module没有injectTo, 默认上层的injectTo
+          // Module has no injectto. The injectto of the previous layer is the default
         },
         {
           name: 'vue-router',
@@ -54,22 +55,23 @@ export default {
             attrs: {
               type: 'text/javascript',
               src: 'https://unpkg.com/vue-router@4.0.11/dist/vue-router.global.prod.js'
+              // HtmlTag has no injectto. The injectto of the previous layer is the default
             }
           },
-          injectTo: '<!-- Custom placeholder for vite plugin insert externals -->'
+          injectTo: '<!-- Custom placeholder for vite plugin inject externals -->'
         },
         {
           name: 'axios',
           global: 'axios',
-          // 只有name和global, 直接替换全局变量，不注入script标签
+          // If there are name and global, but there are no path and htmltag, the global variables will be replaced directly, but the script tag will not be injected
           // path: 'https://cdn.jsdelivr.net/npm/axios@0.22.0/dist/axios.min.js'
         },
-        // 有path, 没有name和global, 注入link标签
+        // If there is path but no name and global, the link tag will be injected
         // {
         //   path: 'https://cdn.jsdelivr.net/npm/md-editor-v3@1.5.0/lib/style.css',
         // },
         {
-          // 注入自定义htmlTag
+          // Inject custom htmltag
           htmlTag: {
             tag: 'link',
             attrs: {
@@ -97,15 +99,49 @@ export default {
 }
 ```
 
-## Options
+## Result
+```js
+// dev
+import { createApp } from 'vue'
+createApp()
 
-| Name | Desc | Type | Default |
-| ---- | ---- | ---- | ------- |
-| injectTo |  | |
-| | | |
+// build
+Vue.createApp()
+```
+```html
+<!-- Inject CDN links -->
+<script type="text/javascript" src="https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js"></script>
+```
 
-path和htmlTag都存在时，优先使用htmlTag
+## InjectExternalsConfig
 
-## License
+Name | Required | Desc | Type | Default
+:---: | :---: | :---: | :---: | :---:
+command | `false` | Inject HTML tag when running which command, A value of true indicates that HTML tags are injected when both build and serve commands are run | `'build' / true` | `'build'`
+injectTo | `false` | Location of HTML tags injection | `'head' / 'body' / 'head-prepend' / 'body-prepend' / string` | `'head-prepend'`
+modules | `true` | Modules configuration | `InjectExternalsModule[]` | `[]`
+
+### InjectExternalsModule
+
+Name | Required | Desc | Type | Default
+:---: | :---: | :---: | :---: | :---:
+name | `false` | Module name | `string`
+global | `false` | Global variables corresponding to the module | `string`
+path | `true` | CDN link of JS or CSS resources. If there is no name or global, it indicates that it is a CSS resource. | `string`
+htmlTag | `true` | Custom HTML tags, priority is higher than path. | `HtmlTagDescriptor`
+injectTo | `false` | Location of HTML tags injection | `string` | `InjectExternalsConfig.injectTo`
+
+#### HtmlTagDescriptor
+```ts
+import { HtmlTagDescriptor } from 'vite'
+```
+Name | Required | Desc | Type | Default
+:---: | :---: | :---: | :---: | :---:
+tag | `true` | Tag name | `string`
+attrs | `false` | Attributes(`{ 'Attribute name': 'Attribute value' }`) | `object`
+children | `false` | Child element (child element tag name or HtmlTagDescriptor collection of child elements) | `string / HtmlTagDescriptor[]`
+injectTo | `false` | Location of HTML tags injection | `'head' / 'body' / 'head-prepend' / 'body-prepend'` | `InjectExternalsModule.injectTo`
+
+## 开源许可证
 
 MIT

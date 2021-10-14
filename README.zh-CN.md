@@ -1,10 +1,10 @@
 <h1 align="center">vite-plugin-inject-externals</h1>
 
-简体中文 | [English](./README.en.md)
+简体中文 | [English](./README.md)
 
 在vite打包时将指定的包改为从CDN引入。
 
-script标签和link标签可以插入到指定位置。
+script标签和link标签可以注入到指定位置。
 
 减少构建时间,并提高生产环境中页面加载速度。
 
@@ -25,6 +25,7 @@ yarn add --dev vite-plugin-inject-exterbals
 ```
 
 ## 基本用法
+
 ```js
 // vite.config.js or vite.config.ts
 import injectExterbals from 'vite-plugin-inject-externals'
@@ -33,13 +34,14 @@ export default {
   plugins: [
     injectExterbals({
       // 默认 'head-prepend'
-      injectTo: '<!-- Custom placeholder for vite plugin insert externals -->',
+      // 自定义注入位置将会替换index.html中的对应文本
+      injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
       modules: [
         {
           name: 'vue',
           global: 'Vue',
           path: 'https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js'
-          // module没有injectTo, 默认上层的injectTo
+          // 如果module没有injectTo, 默认上层的injectTo
         },
         {
           name: 'vue-router',
@@ -50,16 +52,17 @@ export default {
               type: 'text/javascript',
               src: 'https://unpkg.com/vue-router@4.0.11/dist/vue-router.global.prod.js'
             }
+            // 如果htmlTag没有injectTo, 默认上层的injectTo
           },
-          injectTo: '<!-- Custom placeholder for vite plugin insert externals -->'
+          injectTo: '<!-- Custom placeholder for vite plugin inject externals -->'
         },
         {
           name: 'axios',
           global: 'axios',
-          // 只有name和global, 直接替换全局变量，不注入script标签
+          // 如果有name和global，但是没有path和htmltag，会直接替换全局变量，但是不注入script标签
           // path: 'https://cdn.jsdelivr.net/npm/axios@0.22.0/dist/axios.min.js'
         },
-        // 有path, 没有name和global, 注入link标签
+        // 如果有path, 但是没有name和global, 会注入link标签
         // {
         //   path: 'https://cdn.jsdelivr.net/npm/md-editor-v3@1.5.0/lib/style.css',
         // },
@@ -92,15 +95,48 @@ export default {
 }
 ```
 
-## Options
+## 效果
+```js
+// dev
+import { createApp } from 'vue'
+createApp()
 
-Name | Desc | Type | Default
-:---: | :---: | :---: | :---:
-command | 在运行哪个命令时注入html标签 | `'build' / true` | `'build'` 
-injectTo | 生成的html标签注入到什么位置 | ` 'head' / 'body' / 'head-prepend' / 'body-prepend' / string ` | `'head-prepend'`
-modules | 模块配置 | `InsertExternalsModule[]` | `[]`
+// build
+Vue.createApp()
+```
+```html
+<!-- 注入CDN链接 -->
+<script type="text/javascript" src="https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js"></script>
+```
 
-path和htmlTag都存在时，优先使用htmlTag
+## InjectExternalsConfig
+
+Name | Required | Desc | Type | Default
+:---: | :---: | :---: | :---: | :---:
+command | `false` | 在运行哪个命令时注入html标签，build表示在打包时注入，true表示build和serve命令都注入 | `'build' / true` | `'build'` 
+injectTo | `false` | 生成的html标签注入到什么位置 | `'head' / 'body' / 'head-prepend' / 'body-prepend' / string` | `'head-prepend'`
+modules | `true` | 模块配置 | `InjectExternalsModule[]` | `[]`
+
+### InjectExternalsModule
+
+Name | Required | Desc | Type | Default
+:---: | :---: | :---: | :---: | :---:
+name | `false` | 模块名 | `string`
+global | `false` | 全局变量 | `string`
+path | `false` | js或者css资源的cdn链接，如果没有name或global，表示是css资源 | `string`
+htmlTag | `false` | 自定义html标签，优先级比path高 | `HtmlTagDescriptor`
+injectTo | `false` | 生成的html标签注入到什么位置 | `string` | `InjectExternalsConfig.injectTo`
+
+#### HtmlTagDescriptor
+```ts
+import { HtmlTagDescriptor } from 'vite'
+```
+Name | Required | Desc | Type | Default
+:---: | :---: | :---: | :---: | :---:
+tag | `true` | 标签名 | `string`
+attrs | `false` | 属性(`{ 属性名: 属性值 }`) | `object`
+children | `false` | 子元素(子元素标签名或者子元素的HtmlTagDescriptor集合) | `string / HtmlTagDescriptor[]`
+injectTo | `false` | 生成的html标签注入到什么位置 | `'head' / 'body' / 'head-prepend' / 'body-prepend'` | `InjectExternalsModule.injectTo`
 
 ## License
 
