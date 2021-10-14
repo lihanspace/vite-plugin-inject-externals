@@ -142,6 +142,6 @@ attrs | `false` | Attributes(`{ 'Attribute name': 'Attribute value' }`) | `objec
 children | `false` | Child element (child element tag name or HtmlTagDescriptor collection of child elements) | `string / HtmlTagDescriptor[]`
 injectTo | `false` | Location of HTML tags injection | `'head' / 'body' / 'head-prepend' / 'body-prepend'` | `InjectExternalsModule.injectTo`
 
-## 开源许可证
+## License
 
 MIT

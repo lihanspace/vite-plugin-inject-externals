@@ -138,6 +138,6 @@ attrs | `false` | 属性(`{ 属性名: 属性值 }`) | `object`
 children | `false` | 子元素(子元素标签名或者子元素的HtmlTagDescriptor集合) | `string / HtmlTagDescriptor[]`
 injectTo | `false` | 生成的html标签注入到什么位置 | `'head' / 'body' / 'head-prepend' / 'body-prepend'` | `InjectExternalsModule.injectTo`
 
-## License
+## 开源许可证
 
 MIT
