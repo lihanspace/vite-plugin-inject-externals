@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-inject-externals",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "When vite is packaged, the specified package is changed to be imported from CDN.",
   "author": "LiHan<lihana@vip.qq.com>",
   "main": "dist/index.js",
