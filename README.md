@@ -31,7 +31,7 @@ yarn add --dev vite-plugin-inject-exterbals
 ## Basic Usage
 
 ```js
-// vite.config.js or vite.config.ts
+// vite.config.js
 import injectExterbals from 'vite-plugin-inject-externals'
 
 export default {
@@ -55,7 +55,6 @@ export default {
             attrs: {
               type: 'text/javascript',
               src: 'https://unpkg.com/vue-router@4.0.11/dist/vue-router.global.prod.js'
-              // HtmlTag has no injectto. The injectto of the previous layer is the default
             }
           },
           injectTo: '<!-- Custom placeholder for vite plugin inject externals -->'
@@ -128,19 +127,15 @@ Name | Required | Desc | Type | Default
 name | `false` | Module name | `string`
 global | `false` | Global variables corresponding to the module | `string`
 path | `true` | CDN link of JS or CSS resources. If there is no name or global, it indicates that it is a CSS resource. | `string`
-htmlTag | `true` | Custom HTML tags, priority is higher than path. | `HtmlTagDescriptor`
+htmlTag | `true` | Custom HTML tags, priority is higher than path. | `HtmlTag`
 injectTo | `false` | Location of HTML tags injection | `string` | `InjectExternalsConfig.injectTo`
 
-#### HtmlTagDescriptor
-```ts
-import { HtmlTagDescriptor } from 'vite'
-```
+#### HtmlTag
+
 Name | Required | Desc | Type | Default
 :---: | :---: | :---: | :---: | :---:
 tag | `true` | Tag name | `string`
 attrs | `false` | Attributes(`{ 'Attribute name': 'Attribute value' }`) | `object`
-children | `false` | Child element (child element tag name or HtmlTagDescriptor collection of child elements) | `string / HtmlTagDescriptor[]`
-injectTo | `false` | Location of HTML tags injection | `'head' / 'body' / 'head-prepend' / 'body-prepend'` | `InjectExternalsModule.injectTo`
 
 ## License
 

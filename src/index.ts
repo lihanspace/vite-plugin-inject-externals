@@ -1,5 +1,4 @@
-import { Plugin, HtmlTagDescriptor, UserConfig } from 'vite'
-import { GlobalsOption } from 'rollup'
+import { Plugin, UserConfig } from 'vite'
 // @ts-ignore
 import externalGlobals from 'rollup-plugin-external-globals'
 
@@ -21,17 +20,30 @@ export type OptionalInjectTo = DefaultInjectTo | OtherInjectTo
  */
 export type InjectTo = OptionalInjectTo | string
 /**
+ * Html tag name
+ */
+export type HtmlTagName = keyof HTMLElementTagNameMap
+/**
+ * @property tag Html tag name
+ * @property attrs Html tag attributes
+ */
+export type HtmlTag = {
+  tag: HtmlTagName
+  attrs?: Record<string, string | boolean | undefined>
+}
+export type HtmlTagDesc = HtmlTag & { injectTo?: OptionalInjectTo }
+/**
  * @property name Module name
  * @property global Global variable name
  * @property path CDN link
  * @property injectTo Location of HTML tags injection
- * @property htmlTag Inject tags with htmlTag provided by vite, and path will be overwritten
+ * @property htmlTag Descriptor of an HTML tag, and path will be overwritten
  */
 export type InjectExternalsModule = {
   name?: string,
   global?: string,
   path?: string,
-  htmlTag?: HtmlTagDescriptor,
+  htmlTag?: HtmlTag,
   injectTo?: InjectTo
 }
 /**
@@ -55,29 +67,43 @@ export type InjectExternalsConfig = {
 
 const injectToRegExp = /^(head|body|head-prepend|body-prepend)$/
 
-const singleTags: string[] = ['br', 'hr', 'img', 'input', 'param', 'meta', 'link']
-const createTag = (htmlTag: HtmlTagDescriptor | HtmlTagDescriptor[] | string) => {
-  if (Array.isArray(htmlTag)) {
-    let scriptStr = ''
-    for (const htmlTagItem of htmlTag) {
-      scriptStr += createTag(htmlTagItem)
-    }
-    return scriptStr
-  }
-  if (typeof htmlTag === 'string') htmlTag = { tag: htmlTag }
-  const { tag, attrs, children } = htmlTag
+/**
+ * Single tags set
+ */
+const singleTags: Set<string> = new Set(['br', 'hr', 'img', 'input', 'param', 'meta', 'link'])
+/**
+ * Create an HTML tag of string type
+ * @param htmlTag The descriptor or name of an HTML tag
+ */
+const createTag = (htmlTag: HtmlTag | HtmlTagName) => {
+  if (!htmlTag) return ''
+  if (typeof htmlTag === 'string') htmlTag = { tag: htmlTag, attrs: {} }
+  let { tag, attrs } = htmlTag
+  if (!tag) return ''
+  if (!attrs) attrs = {}
   let scriptStr = `<${ tag }`
   for (const attrsKey in attrs) {
-    scriptStr += ` ${ attrsKey }="${ attrs[attrsKey] }"`
+    scriptStr += ` ${ attrsKey }`
+    if (attrs[attrsKey] === false || attrs[attrsKey]) scriptStr += `="${ attrs[attrsKey] }"`
   }
-  if (children) scriptStr += createTag(children)
   scriptStr += `>`
-  if (!singleTags.includes(tag)) scriptStr += `</${ tag }>`
+  if (!singleTags.has(tag)) scriptStr += `</${ tag }>`
   return scriptStr
 }
-const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): HtmlTagDescriptor => {
-  if (moduleInfo.htmlTag) return moduleInfo.htmlTag
-  let htmlTag: HtmlTagDescriptor
+/**
+ * Initialize the descriptor of an HTML tag
+ */
+const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): HtmlTagDesc => {
+  let htmlTagInjectTo: OptionalInjectTo | undefined = undefined
+  if (injectToRegExp.test(moduleInfo.injectTo)) htmlTagInjectTo = moduleInfo.injectTo as OptionalInjectTo
+  let htmlTag: HtmlTagDesc
+  if (moduleInfo.htmlTag) {
+    htmlTag = moduleInfo.htmlTag
+    if (htmlTagInjectTo) {
+      htmlTag.injectTo = htmlTagInjectTo
+    }
+    return htmlTag
+  }
   if (moduleInfo.name && moduleInfo.global) {
     htmlTag = {
       tag: 'script',
@@ -95,9 +121,7 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       }
     }
   }
-  if (injectToRegExp.test(moduleInfo.injectTo)) {
-    htmlTag.injectTo = moduleInfo.injectTo as OptionalInjectTo
-  }
+  if (htmlTagInjectTo) htmlTag.injectTo = htmlTagInjectTo
   return htmlTag
 }
 const injectExternals = (config: InjectExternalsConfig): Plugin => {
@@ -108,21 +132,21 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
     modules = []
   }
   let canIInject = command === true
-  // 字符串标签列表数据
-  let strTagsData: Record<string, string[]> = {}
-  // 默认注入的标签列表
-  let htmlTags: HtmlTagDescriptor[] = []
-  // 模块和全局变量名
-  let globalsOption: GlobalsOption = {}
-  // 自定义注入的模块
+  // Map<Injection location of type string, Array of HTML tags of string type>
+  let strTagsData: Map<string, string[]> = new Map<string, string[]>()
+  // Array of descriptors of HTML tags injected by vite
+  let htmlTags: HtmlTagDesc[] = []
+  // Record<Module name, Global variable name>
+  let globalsOption: Record<string, string> = {}
+  // Array of modules of custom injection location
   let customModules: (InjectExternalsModule & { injectTo: string })[] = []
-  // 默认注入的模块
+  // Array of modules injected by vite
   let optionalModules: (InjectExternalsModule & { injectTo: OptionalInjectTo })[] = []
+  // Fill globalsOption and classify modules
   for (let moduleItem of modules) {
     if (moduleItem.name && moduleItem.global) globalsOption[moduleItem.name] = moduleItem.global
     if (!moduleItem.path && !moduleItem.htmlTag) continue
     if (!moduleItem.injectTo) moduleItem.injectTo = injectTo
-    if (moduleItem.htmlTag?.injectTo) moduleItem.injectTo = moduleItem.htmlTag.injectTo
     if (injectToRegExp.test(moduleItem.injectTo)) {
       optionalModules.push(moduleItem as InjectExternalsModule & { injectTo: OptionalInjectTo })
     } else {
@@ -131,14 +155,19 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
   }
   for (const customModule of customModules) {
     let htmlTag = initHtmlTag(customModule)
-    if (!Array.isArray(strTagsData[customModule.injectTo])) {
-      strTagsData[customModule.injectTo] = []
+    let htmlTagArr: string[]
+    if (Array.isArray(strTagsData.get(customModule.injectTo))) {
+      htmlTagArr = strTagsData.get(customModule.injectTo) as string[]
+    } else {
+      htmlTagArr = []
+      strTagsData.set(customModule.injectTo, htmlTagArr)
     }
     if (htmlTag.tag === 'link') {
-      strTagsData[customModule.injectTo].unshift(createTag(htmlTag))
+      htmlTagArr.unshift(createTag(htmlTag))
     } else {
-      strTagsData[customModule.injectTo].push(createTag(htmlTag))
+      htmlTagArr.push(createTag(htmlTag))
     }
+    strTagsData.set(customModule.injectTo, htmlTagArr)
   }
   for (const optionalModule of optionalModules) {
     let htmlTag = initHtmlTag(optionalModule)
@@ -159,7 +188,6 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
       if (viteCommand === 'build') {
         canIInject = true
         userConfig.build!.rollupOptions = {
-          // external: [...externalLibs],
           plugins: [externalGlobals(globalsOption)]
         }
       }
@@ -176,8 +204,8 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
         spaceStr = val.replace(/\r/g, '').replace(/\n/g, '')
       }
       let joinStr = spaceStr ? `\n${ spaceStr }` : '\n  '
-      for (const key in strTagsData) {
-        newHtml = newHtml.replace(key, strTagsData[key].join(joinStr))
+      for (const [key, strTagSet] of strTagsData) {
+        newHtml = newHtml.replace(key, strTagSet.join(joinStr))
       }
       if (canIInject) {
         return {

@@ -27,7 +27,7 @@ yarn add --dev vite-plugin-inject-exterbals
 ## 基本用法
 
 ```js
-// vite.config.js or vite.config.ts
+// vite.config.js
 import injectExterbals from 'vite-plugin-inject-externals'
 
 export default {
@@ -52,7 +52,6 @@ export default {
               type: 'text/javascript',
               src: 'https://unpkg.com/vue-router@4.0.11/dist/vue-router.global.prod.js'
             }
-            // 如果htmlTag没有injectTo, 默认上层的injectTo
           },
           injectTo: '<!-- Custom placeholder for vite plugin inject externals -->'
         },
@@ -124,19 +123,16 @@ Name | Required | Desc | Type | Default
 name | `false` | 模块名 | `string`
 global | `false` | 全局变量 | `string`
 path | `false` | js或者css资源的cdn链接，如果没有name或global，表示是css资源 | `string`
-htmlTag | `false` | 自定义html标签，优先级比path高 | `HtmlTagDescriptor`
+htmlTag | `false` | 自定义html标签，优先级比path高 | `HtmlTag`
 injectTo | `false` | 生成的html标签注入到什么位置 | `string` | `InjectExternalsConfig.injectTo`
 
-#### HtmlTagDescriptor
+#### HtmlTag
 ```ts
-import { HtmlTagDescriptor } from 'vite'
 ```
 Name | Required | Desc | Type | Default
 :---: | :---: | :---: | :---: | :---:
 tag | `true` | 标签名 | `string`
 attrs | `false` | 属性(`{ 属性名: 属性值 }`) | `object`
-children | `false` | 子元素(子元素标签名或者子元素的HtmlTagDescriptor集合) | `string / HtmlTagDescriptor[]`
-injectTo | `false` | 生成的html标签注入到什么位置 | `'head' / 'body' / 'head-prepend' / 'body-prepend'` | `InjectExternalsModule.injectTo`
 
 ## 开源许可证
 
