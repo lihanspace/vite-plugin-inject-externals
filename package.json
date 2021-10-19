@@ -2,11 +2,11 @@
   "name": "vite-plugin-inject-externals",
   "version": "1.0.1",
   "description": "When vite is packaged, the specified package is changed to be imported from CDN.",
-  "author": "LiHan<lihana@vip.qq.com>",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
+    "dev": "tsup src/index.ts --dts --format cjs,esm --watch",
     "build": "tsup src/index.ts --dts --format cjs,esm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -25,6 +25,10 @@
     "script",
     "link"
   ],
+  "bugs": {
+    "url": "https://github.com/lihanspace/vite-plugin-inject-externals/issues"
+  },
+  "homepage": "https://github.com/lihanspace/vite-plugin-inject-externals#readme",
   "devDependencies": {
     "@types/node": "^16.10.3",
     "rollup": "^2.58.0",
@@ -35,5 +39,6 @@
   "dependencies": {
     "rollup-plugin-external-globals": "^0.6.1"
   },
+  "author": "LiHan<lihana@vip.qq.com>(https://lihan.space)",
   "license": "MIT"
 }
