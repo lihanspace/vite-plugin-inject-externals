@@ -9,9 +9,10 @@ script标签和link标签可以注入到指定位置。
 减少构建时间,并提高生产环境中页面加载速度。
 
 <p align="center">
-    <a href="https://npmjs.com/package/vite-plugin-inject-externals/releases"><img src="https://img.shields.io/npm/v/vite-plugin-inject-externals.svg" alt="npm package"></a>
-    <a href="https://github.com/lihanspace/vite-plugin-inject-externals/releases"><img src="https://img.shields.io/github/v/release/lihanspace/vite-plugin-inject-externals.svg" alt="github release"></a>
-    <a href="https://github.com/lihanspace/vite-plugin-inject-externals/blob/master/LICENSE"><img src="https://img.shields.io/github/license/lihanspace/vite-plugin-inject-externals.svg" alt="License"></a>
+    <a href="https://npmjs.com/package/vite-plugin-inject-externals"><img src="https://img.shields.io/npm/v/vite-plugin-inject-externals.svg?style=plastic&color=cb0303" alt="npm package"></a>
+    <a href="https://npmjs.com/package/vite-plugin-inject-externals"><img src="https://img.shields.io/npm/dm/vite-plugin-inject-externals.svg?style=plastic" alt="downloads/month"></a>
+    <a href="https://github.com/lihanspace/vite-plugin-inject-externals/releases"><img src="https://img.shields.io/github/v/release/lihanspace/vite-plugin-inject-externals.svg?style=plastic" alt="github release"></a>
+    <a href="https://github.com/lihanspace/vite-plugin-inject-externals/blob/master/LICENSE"><img src="https://img.shields.io/github/license/lihanspace/vite-plugin-inject-externals.svg?style=plastic" alt="License"></a>
 </p>
 
 ## 安装
