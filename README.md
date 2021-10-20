@@ -10,8 +10,9 @@ Reduce build time and increase page load speed in production environments.
 
 <p align="center">
     <a href="https://npmjs.com/package/vite-plugin-inject-externals"><img src="https://img.shields.io/npm/v/vite-plugin-inject-externals.svg?style=plastic&color=cb0303" alt="npm package"></a>
-    <a href="https://npmjs.com/package/vite-plugin-inject-externals"><img src="https://img.shields.io/npm/dm/vite-plugin-inject-externals.svg?style=plastic" alt="downloads/month"></a>
-    <a href="https://github.com/lihanspace/vite-plugin-inject-externals/releases"><img src="https://img.shields.io/github/v/release/lihanspace/vite-plugin-inject-externals.svg?style=plastic" alt="github release"></a>
+    <a href="https://npmjs.com/package/vite-plugin-inject-externals"><img src="https://img.shields.io/npm/dm/vite-plugin-inject-externals.svg?style=plastic&color=eb7738" alt="npm downloads/month"></a>
+    <a href="https://npmjs.com/package/vite-plugin-inject-externals"><img src="https://img.shields.io/bundlephobia/min/vite-plugin-inject-externals.svg?style=plastic&color=12bd79" alt="npm minified size"></a>
+    <a href="https://github.com/lihanspace/vite-plugin-inject-externals/releases"><img src="https://img.shields.io/github/v/release/lihanspace/vite-plugin-inject-externals.svg?display_name=release&sort=semver&style=plastic" alt="github release"></a>
     <a href="https://github.com/lihanspace/vite-plugin-inject-externals/blob/master/LICENSE"><img src="https://img.shields.io/github/license/lihanspace/vite-plugin-inject-externals.svg?style=plastic" alt="License"></a>
 </p>
 
