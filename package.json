@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-inject-externals",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "When vite is packaged, the specified package is changed to be imported from CDN.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -10,7 +10,9 @@
     "build": "tsup src/index.ts --dts --format cjs,esm",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/lihanspace/vite-plugin-inject-externals.git"
