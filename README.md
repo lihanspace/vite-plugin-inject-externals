@@ -99,6 +99,7 @@ export default {
 ```
 
 ## Result
+
 ```js
 // dev
 import { createApp } from 'vue'
@@ -107,6 +108,7 @@ createApp()
 // build
 Vue.createApp()
 ```
+
 ```html
 <!-- Inject CDN links -->
 <script type="text/javascript" src="https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js"></script>

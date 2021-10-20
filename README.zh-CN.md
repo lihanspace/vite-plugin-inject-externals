@@ -95,6 +95,7 @@ export default {
 ```
 
 ## 效果
+
 ```js
 // dev
 import { createApp } from 'vue'
@@ -103,6 +104,7 @@ createApp()
 // build
 Vue.createApp()
 ```
+
 ```html
 <!-- 注入CDN链接 -->
 <script type="text/javascript" src="https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js"></script>
@@ -127,8 +129,7 @@ htmlTag | `false` | 自定义html标签，优先级比path高 | `HtmlTag`
 injectTo | `false` | 生成的html标签注入到什么位置 | `string` | `InjectExternalsConfig.injectTo`
 
 #### HtmlTag
-```ts
-```
+
 Name | Required | Desc | Type | Default
 :---: | :---: | :---: | :---: | :---:
 tag | `true` | 标签名 | `string`
