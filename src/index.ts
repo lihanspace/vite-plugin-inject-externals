@@ -81,14 +81,14 @@ const createTag = (htmlTag: HtmlTag | HtmlTagName) => {
   let { tag, attrs } = htmlTag
   if (!tag) return ''
   if (!attrs) attrs = {}
-  let scriptStr = `<${ tag }`
+  let htmlTagStr = `<${ tag }`
   for (const attrsKey in attrs) {
-    scriptStr += ` ${ attrsKey }`
-    if (attrs[attrsKey] === false || attrs[attrsKey]) scriptStr += `="${ attrs[attrsKey] }"`
+    htmlTagStr += ` ${ attrsKey }`
+    if (attrs[attrsKey] === false || attrs[attrsKey]) htmlTagStr += `="${ attrs[attrsKey] }"`
   }
-  scriptStr += `>`
-  if (!singleTags.has(tag)) scriptStr += `</${ tag }>`
-  return scriptStr
+  htmlTagStr += `>`
+  if (!singleTags.has(tag)) htmlTagStr += `</${ tag }>`
+  return htmlTagStr
 }
 /**
  * Initialize the descriptor of an HTML tag
@@ -109,7 +109,8 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       tag: 'script',
       attrs: {
         type: 'text/javascript',
-        src: moduleInfo.path
+        src: moduleInfo.path,
+        crossorigin: 'anonymous'
       }
     }
   } else {
@@ -117,7 +118,8 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       tag: 'link',
       attrs: {
         rel: 'stylesheet',
-        href: moduleInfo.path
+        href: moduleInfo.path,
+        crossorigin: 'anonymous'
       }
     }
   }
