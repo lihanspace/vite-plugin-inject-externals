@@ -110,7 +110,7 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       attrs: {
         type: 'text/javascript',
         src: moduleInfo.path,
-        crossorigin: 'anonymous'
+        crossorigin: ''
       }
     }
   } else {
@@ -119,7 +119,7 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       attrs: {
         rel: 'stylesheet',
         href: moduleInfo.path,
-        crossorigin: 'anonymous'
+        crossorigin: ''
       }
     }
   }
@@ -146,7 +146,7 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
   let optionalModules: (InjectExternalsModule & { injectTo: OptionalInjectTo })[] = []
   // Fill globalsOption and classify modules
   for (let moduleItem of modules) {
-    if (moduleItem.name && moduleItem.global) globalsOption[moduleItem.name] = moduleItem.global
+    if (moduleItem.name) globalsOption[moduleItem.name] = moduleItem.global || 'noGlobal&deleteThisImport'
     if (!moduleItem.path && !moduleItem.htmlTag) continue
     if (!moduleItem.injectTo) moduleItem.injectTo = injectTo
     if (injectToRegExp.test(moduleItem.injectTo)) {

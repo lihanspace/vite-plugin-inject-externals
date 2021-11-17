@@ -47,19 +47,6 @@ export default {
           name: 'vue',
           global: 'Vue',
           path: 'https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js'
-          // Module has no injectto. The injectto of the previous layer is the default
-        },
-        {
-          name: 'vue-router',
-          global: 'VueRouter',
-          htmlTag: {
-            tag: 'script',
-            attrs: {
-              type: 'text/javascript',
-              src: 'https://unpkg.com/vue-router@4.0.11/dist/vue-router.global.prod.js'
-            }
-          },
-          injectTo: '<!-- Custom placeholder for vite plugin inject externals -->'
         },
         {
           name: 'axios',
@@ -67,32 +54,17 @@ export default {
           // If there are name and global, but there are no path and htmltag, the global variables will be replaced directly, but the script tag will not be injected
           // path: 'https://cdn.jsdelivr.net/npm/axios@0.22.0/dist/axios.min.js'
         },
-        // If there is path but no name and global, the link tag will be injected
-        // {
-        //   path: 'https://cdn.jsdelivr.net/npm/md-editor-v3@1.5.0/lib/style.css',
-        // },
-        {
-          // Inject custom htmltag
-          htmlTag: {
-            tag: 'link',
-            attrs: {
-              rel: 'stylesheet',
-              href: 'https://cdn.jsdelivr.net/npm/md-editor-v3@1.5.0/lib/style.css'
-            }
-          },
-          injectTo: '<!-- example1 -->'
-        },
         {
           name: 'md-editor-v3',
           global: 'MdEditorV3',
           path: 'https://cdn.jsdelivr.net/npm/md-editor-v3@1.5.0/lib/md-editor-v3.umd.js',
           injectTo: '<!-- example2 -->'
         },
+        // If there is path but no global, the link tag will be injected
         {
-          name: 'dayjs',
-          global: 'dayjs',
-          path: 'https://cdn.jsdelivr.net/npm/dayjs@1.8.21/dayjs.min.js',
-          injectTo: '<!-- example3 -->'
+          name: 'md-editor-v3/lib/style.css',
+          // If there is a name but no global, the import of name will be deleted, which is only applicable to bare imports(import 'md-editor-v3/lib/style.css')
+          path: 'https://cdn.jsdelivr.net/npm/md-editor-v3@1.5.0/lib/style.css',
         }
       ]
     })
@@ -105,15 +77,62 @@ export default {
 ```js
 // dev
 import { createApp } from 'vue'
+import axios from 'axios'
+import MdEditorV3 from 'md-editor-v3'
+import 'md-editor-v3/lib/style.css'
+
 createApp()
+axios()
+console.log(MdEditorV3)
 
 // build
 Vue.createApp()
+axios()
+console.log(MdEditorV3)
 ```
 
 ```html
 <!-- Inject CDN links -->
 <script type="text/javascript" src="https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js"></script>
+```
+
+## Extended usage
+
+```js
+// vite.config.js
+import injectExterbals from 'vite-plugin-inject-externals'
+
+export default {
+  plugins: [
+    injectExterbals({
+      // Default value: 'head-prepend'
+      // The custom injection location will replace the corresponding text in index.html
+      injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
+      modules: [
+        {
+          name: 'vue',
+          // When the import method is bare imports(import 'md-editor-v3/lib/style.css'), and there is a name('md-editor-v3/lib/style.css') but no global, the import will be deleted.
+          // When the import method is not bare imports, and there are name and global, the global variables will be replaced.
+          global: 'Vue',
+          // If there is a path, the script tag will be injected if there are name and global.
+          // If there is a path, the link tag will be injected if there is no global.
+          path: 'https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js',
+          // Custom HTML tags with higher priority than path
+          htmlTag: {
+            tag: 'script',
+            attrs: {
+              type: 'text/javascript',
+              crossorigin: '',
+              src: 'https://unpkg.com/vue@3.2.19/dist/vue.global.prod.js'
+            }
+          },
+          // Module has no injectto. The injectto of the previous layer is the default
+          injectTo: '<!-- Custom1 -->'
+        }
+      ]
+    })
+  ],
+}
 ```
 
 ## InjectExternalsConfig
@@ -130,7 +149,7 @@ Name | Required | Desc | Type | Default
 :---: | :---: | :---: | :---: | :---:
 name | `false` | Module name | `string`
 global | `false` | Global variables corresponding to the module | `string`
-path | `true` | CDN link of JS or CSS resources. If there is no name or global, it indicates that it is a CSS resource. | `string`
+path | `true` | CDN link of JS or CSS resources. If there is no global, it indicates that it is a CSS resource. | `string`
 htmlTag | `true` | Custom HTML tags, priority is higher than path. | `HtmlTag`
 injectTo | `false` | Location of HTML tags injection | `string` | `InjectExternalsConfig.injectTo`
 
