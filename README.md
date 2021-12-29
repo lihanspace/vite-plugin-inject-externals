@@ -21,24 +21,24 @@ Reduce build time and increase page load speed in production environments.
 Install the plugin with npm:
 
 ```shell
-npm install --save-dev vite-plugin-inject-exterbals
+npm install --save-dev vite-plugin-inject-externals
 ```
 
 or yarn
 
 ```shell
-yarn add --dev vite-plugin-inject-exterbals
+yarn add --dev vite-plugin-inject-externals
 ```
 
 ## Basic Usage
 
 ```js
 // vite.config.js
-import injectExterbals from 'vite-plugin-inject-externals'
+import injectExternals from 'vite-plugin-inject-externals'
 
 export default {
   plugins: [
-    injectExterbals({
+    injectExternals({
       // Default value: 'head-prepend'
       // The custom injection location will replace the corresponding text in index.html
       injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
@@ -100,11 +100,11 @@ console.log(MdEditorV3)
 
 ```js
 // vite.config.js
-import injectExterbals from 'vite-plugin-inject-externals'
+import injectExternals from 'vite-plugin-inject-externals'
 
 export default {
   plugins: [
-    injectExterbals({
+    injectExternals({
       // Default value: 'head-prepend'
       // The custom injection location will replace the corresponding text in index.html
       injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
@@ -137,28 +137,28 @@ export default {
 
 ## InjectExternalsConfig
 
-Name | Required | Desc | Type | Default
-:---: | :---: | :---: | :---: | :---:
-command | `false` | Inject HTML tag when running which command, A value of true indicates that HTML tags are injected when both build and serve commands are run | `'build' / true` | `'build'`
-injectTo | `false` | Location of HTML tags injection | `'head' / 'body' / 'head-prepend' / 'body-prepend' / string` | `'head-prepend'`
-modules | `true` | Modules configuration | `InjectExternalsModule[]` | `[]`
+|   Name   |  Required |                                                                     Desc                                                                     |                             Type                             |     Default      |
+|:--------:|:---------:|:--------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------:|:----------------:|
+| command  |  `false`  | Inject HTML tag when running which command, A value of true indicates that HTML tags are injected when both build and serve commands are run |                       `'build' / true`                       |    `'build'`     |
+| injectTo |  `false`  |                                                       Location of HTML tags injection                                                        | `'head' / 'body' / 'head-prepend' / 'body-prepend' / string` | `'head-prepend'` |
+| modules  |  `true`   |                                                            Modules configuration                                                             |                  `InjectExternalsModule[]`                   |       `[]`       |
 
 ### InjectExternalsModule
 
-Name | Required | Desc | Type | Default
-:---: | :---: | :---: | :---: | :---:
-name | `false` | Module name | `string`
-global | `false` | Global variables corresponding to the module | `string`
-path | `true` | CDN link of JS or CSS resources. If there is no global, it indicates that it is a CSS resource. | `string`
-htmlTag | `true` | Custom HTML tags, priority is higher than path. | `HtmlTag`
-injectTo | `false` | Location of HTML tags injection | `string` | `InjectExternalsConfig.injectTo`
+|   Name   | Required |                                              Desc                                               |   Type    |                    Default       |
+|:--------:|:--------:|:-----------------------------------------------------------------------------------------------:|:---------:|:--------------------------------:|
+|   name   | `false`  |                                           Module name                                           | `string`  |
+|  global  | `false`  |                          Global variables corresponding to the module                           | `string`  |
+|   path   |  `true`  | CDN link of JS or CSS resources. If there is no global, it indicates that it is a CSS resource. | `string`  |
+| htmlTag  |  `true`  |                         Custom HTML tags, priority is higher than path.                         | `HtmlTag` |
+| injectTo | `false`  |                                 Location of HTML tags injection                                 | `string`  | `InjectExternalsConfig.injectTo` | 
 
 #### HtmlTag
 
-Name | Required | Desc | Type | Default
-:---: | :---: | :---: | :---: | :---:
-tag | `true` | Tag name | `string`
-attrs | `false` | Attributes(`{ 'Attribute name': 'Attribute value' }`) | `object`
+| Name  | Required |                         Desc                          |   Type   | Default |
+|:-----:|:--------:|:-----------------------------------------------------:|:--------:|:-------:|
+|  tag  |  `true`  |                       Tag name                        | `string` |
+| attrs | `false`  | Attributes(`{ 'Attribute name': 'Attribute value' }`) | `object` |
 
 ## License
 

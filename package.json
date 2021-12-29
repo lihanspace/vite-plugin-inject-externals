@@ -41,6 +41,6 @@
   "dependencies": {
     "rollup-plugin-external-globals": "^0.6.1"
   },
-  "author": "LiHan<lihana@vip.qq.com>(https://lihan.space)",
+  "author": "LiHan <lihana@vip.qq.com> (https://lihan.space)",
   "license": "MIT"
 }

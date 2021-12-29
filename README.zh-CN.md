@@ -21,24 +21,24 @@ script标签和link标签可以注入到指定位置。
 通过npm下载
 
 ```shell
-npm install --save-dev vite-plugin-inject-exterbals
+npm install --save-dev vite-plugin-inject-externals
 ```
 
 通过yarn下载
 
 ```shell
-yarn add --dev vite-plugin-inject-exterbals
+yarn add --dev vite-plugin-inject-externals
 ```
 
 ## 基本用法
 
 ```js
 // vite.config.js
-import injectExterbals from 'vite-plugin-inject-externals'
+import injectExternals from 'vite-plugin-inject-externals'
 
 export default {
   plugins: [
-    injectExterbals({
+    injectExternals({
       // 默认 'head-prepend'
       // 自定义注入位置将会替换index.html中的对应文本
       injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
@@ -100,11 +100,11 @@ console.log(MdEditorV3)
 
 ```js
 // vite.config.js
-import injectExterbals from 'vite-plugin-inject-externals'
+import injectExternals from 'vite-plugin-inject-externals'
 
 export default {
   plugins: [
-    injectExterbals({
+    injectExternals({
       // 默认 'head-prepend'
       // 自定义注入位置将会替换index.html中的对应文本
       injectTo: '<!-- Custom placeholder for vite plugin inject externals -->',
@@ -137,28 +137,28 @@ export default {
 
 ## InjectExternalsConfig
 
-Name | Required | Desc | Type | Default
-:---: | :---: | :---: | :---: | :---:
-command | `false` | 在运行哪个命令时注入html标签，build表示在打包时注入，true表示build和serve命令都注入 | `'build' / true` | `'build'`
-injectTo | `false` | 生成的html标签注入到什么位置 | `'head' / 'body' / 'head-prepend' / 'body-prepend' / string` | `'head-prepend'`
-modules | `true` | 模块配置 | `InjectExternalsModule[]` | `[]`
+|   Name   | Required |                            Desc                             |                             Type                             |     Default      |
+|:--------:|:--------:|:-----------------------------------------------------------:|:------------------------------------------------------------:|:----------------:|
+| command  | `false`  | 在运行哪个命令时注入html标签，build表示在打包时注入，true表示build和serve命令都注入 |                       `'build' / true`                       |    `'build'`     |
+| injectTo | `false`  |                      生成的html标签注入到什么位置                       | `'head' / 'body' / 'head-prepend' / 'body-prepend' / string` | `'head-prepend'` |
+| modules  |  `true`  |                            模块配置                             |                  `InjectExternalsModule[]`                   |       `[]`       |
 
 ### InjectExternalsModule
 
-Name | Required | Desc | Type | Default
-:---: | :---: | :---: | :---: | :---:
-name | `false` | 模块名 | `string`
-global | `false` | 全局变量 | `string`
-path | `false` | js或者css资源的cdn链接，如果没有global，表示是css资源 | `string`
-htmlTag | `false` | 自定义html标签，优先级比path高 | `HtmlTag`
-injectTo | `false` | 生成的html标签注入到什么位置 | `string` | `InjectExternalsConfig.injectTo`
+|   Name   | Required |                  Desc               |   Type    |             Default              |
+|:--------:|:--------:|:-----------------------------------:|:---------:|:--------------------------------:|
+|   name   | `false`  |                 模块名                 | `string`  |
+|  global  | `false`  |                全局变量                 | `string`  |
+|   path   | `false`  | js或者css资源的cdn链接，如果没有global，表示是css资源 | `string`  |
+| htmlTag  | `false`  |         自定义html标签，优先级比path高         | `HtmlTag` |
+| injectTo | `false`  |          生成的html标签注入到什么位置           | `string`  | `InjectExternalsConfig.injectTo` |
 
 #### HtmlTag
 
-Name | Required | Desc | Type | Default
-:---: | :---: | :---: | :---: | :---:
-tag | `true` | 标签名 | `string`
-attrs | `false` | 属性(`{ 属性名: 属性值 }`) | `object`
+| Name  | Required |        Desc        |   Type   | Default |
+|:-----:|:--------:|:------------------:|:--------:|:-------:|
+|  tag  |  `true`  |        标签名         | `string` |
+| attrs | `false`  | 属性(`{ 属性名: 属性值 }`) | `object` |
 
 ## 开源许可证
 
