@@ -24,12 +24,6 @@ script标签和link标签可以注入到指定位置。
 npm install --save-dev vite-plugin-inject-externals
 ```
 
-通过yarn下载
-
-```shell
-yarn add --dev vite-plugin-inject-externals
-```
-
 ## 基本用法
 
 ```js

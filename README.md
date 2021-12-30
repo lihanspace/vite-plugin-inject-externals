@@ -24,12 +24,6 @@ Install the plugin with npm:
 npm install --save-dev vite-plugin-inject-externals
 ```
 
-or yarn
-
-```shell
-yarn add --dev vite-plugin-inject-externals
-```
-
 ## Basic Usage
 
 ```js

@@ -2,42 +2,40 @@ import { Plugin, UserConfig } from 'vite'
 // @ts-ignore
 import externalGlobals from 'rollup-plugin-external-globals'
 
-export type DefaultInjectTo = 'head-prepend'
-export type OtherInjectTo = 'head' | 'body' | 'body-prepend'
-export type OptionalInjectTo = DefaultInjectTo | OtherInjectTo
 /**
- * Location of HTML tags injection
- * @default 'head-prepend' Inject at the prepend of the head tag
- * @example
- * 'head' - Inject at the end of the head tag
- * 'body' - Inject at the end of the head tag
- * 'head-prepend' - Inject at the prepend of the head tag
- * 'body-prepend' - Inject at the prepend of the body tag
- * string - Custom placeholder - Replace the first matching custom placeholder in index.html
- * e.g.: '<!-- Custom placeholder for vite plugin inject externals -->'
+ * @default 'head-prepend'
+ */
+export type OptionalInjectTo = 'head' | 'body' | 'head-prepend' | 'body-prepend'
+/**
+ * HTML标签注入的位置 // Location of HTML tags injection
+ * @default 'head-prepend'
  * @description
- * The injectTo priority is sorted from high to low: htmlTag > module > config
+ * - injectTo优先级从高到低排序：module > config
+ * - The injectTo priority is sorted from high to low: module > config
+ * - 'head' - 在head标签的末尾注入 // Inject at the end of the head tag
+ * - 'body' - 在body标签的末尾注入 // Inject at the end of the head tag
+ * - 'head-prepend' - 在head标签的开头注入 // Inject at the start of the head tag
+ * - 'body-prepend' - 在body标签的开头注入 // Inject at the start of the body tag
+ * - string - 自定义占位符：替换index.html中第一个匹配的自定义占位符 // Custom placeholder: Replace the first matching custom placeholder in index.html
+ * @example
+ * '<!-- Custom placeholder for vite-plugin-inject-externals -->'
  */
 export type InjectTo = OptionalInjectTo | string
 /**
- * Html tag name
- */
-export type HtmlTagName = keyof HTMLElementTagNameMap
-/**
- * @property tag Html tag name
- * @property attrs Html tag attributes
+ * @property tag HTML标签名 // HTML tag name
+ * @property attrs HTML标签属性 // HTML tag attributes
  */
 export type HtmlTag = {
-  tag: HtmlTagName
+  tag: keyof HTMLElementTagNameMap
   attrs?: Record<string, string | boolean | undefined>
 }
 export type HtmlTagDesc = HtmlTag & { injectTo?: OptionalInjectTo }
 /**
- * @property name Module name
- * @property global Global variable name
- * @property path CDN link
- * @property injectTo Location of HTML tags injection
- * @property htmlTag Descriptor of an HTML tag, and path will be overwritten
+ * @property name 模块名 // Module name
+ * @property global 全局变量名 // Global variable name
+ * @property path CDN链接 // CDN link
+ * @property injectTo HTML标签注入的位置 // Location of HTML tags injection
+ * @property htmlTag HTML标签的描述信息，path属性会被覆盖 // Descriptor of an HTML tag, and the path attribute will be overwritten
  */
 export type InjectExternalsModule = {
   name?: string,
@@ -47,7 +45,7 @@ export type InjectExternalsModule = {
   injectTo?: InjectTo
 }
 /**
- * Inject HTML tag when running which command
+ * 运行哪个命令时插入HTML标签 // Inject HTML tag when running which command
  * @default 'build'
  * @example
  * 'build' - when running build
@@ -55,9 +53,9 @@ export type InjectExternalsModule = {
  */
 export type ConfigEnvCommand = 'build' | true
 /**
- * @property command Inject HTML tag when running which command
- * @property injectTo Location of HTML tags injection
- * @property modules Module collection
+ * @property command 运行哪个命令时插入HTML标签 // Inject HTML tag when running which command
+ * @property injectTo HTML标签注入的位置 // Location of HTML tags injection
+ * @property modules 模块配置数组 // Module array
  */
 export type InjectExternalsConfig = {
   command?: ConfigEnvCommand
@@ -72,12 +70,10 @@ const injectToRegExp = /^(head|body|head-prepend|body-prepend)$/
  */
 const singleTags: Set<string> = new Set(['br', 'hr', 'img', 'input', 'param', 'meta', 'link'])
 /**
- * Create an HTML tag of string type
- * @param htmlTag The descriptor or name of an HTML tag
+ * 创建HTML标签字符串
  */
-const createTag = (htmlTag: HtmlTag | HtmlTagName) => {
+const createTag = (htmlTag: HtmlTag) => {
   if (!htmlTag) return ''
-  if (typeof htmlTag === 'string') htmlTag = { tag: htmlTag, attrs: {} }
   let { tag, attrs } = htmlTag
   if (!tag) return ''
   if (!attrs) attrs = {}
@@ -91,7 +87,7 @@ const createTag = (htmlTag: HtmlTag | HtmlTagName) => {
   return htmlTagStr
 }
 /**
- * Initialize the descriptor of an HTML tag
+ * 通过模块配置初始化HTML标签的描述
  */
 const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): HtmlTagDesc => {
   let htmlTagInjectTo: OptionalInjectTo | undefined = undefined
@@ -134,19 +130,21 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
     modules = []
   }
   let canIInject = command === true
-  // Map<Injection location of type string, Array of HTML tags of string type>
+  // Map<注入位置, HTML标签字符串数组>
   let strTagsData: Map<string, string[]> = new Map<string, string[]>()
-  // Array of descriptors of HTML tags injected by vite
+  // 通过vite注入的HTML标签描述符数组
   let htmlTags: HtmlTagDesc[] = []
-  // Record<Module name, Global variable name>
+  // Record<模块名, 全局变量名>
   let globalsOption: Record<string, string> = {}
-  // Array of modules of custom injection location
+  // 自定义注入位置的模块数组
   let customModules: (InjectExternalsModule & { injectTo: string })[] = []
-  // Array of modules injected by vite
+  // 通过vite注入的模块数组
   let optionalModules: (InjectExternalsModule & { injectTo: OptionalInjectTo })[] = []
-  // Fill globalsOption and classify modules
+  // 填充globalsOption 模块分类
   for (let moduleItem of modules) {
+    // 以裸导入(比如import './test.css')的方式导入资源，如果想要删除导入，global随便给个字符串值，不能是空值
     if (moduleItem.name) globalsOption[moduleItem.name] = moduleItem.global || 'noGlobal&deleteThisImport'
+    // path和htmlTag都不存在，说明只需要删除导入和更换全区变量名，跳出循环
     if (!moduleItem.path && !moduleItem.htmlTag) continue
     if (!moduleItem.injectTo) moduleItem.injectTo = injectTo
     if (injectToRegExp.test(moduleItem.injectTo)) {
