@@ -1,0 +1,11 @@
+node_modules
+.vscode
+.idea
+*.log*
+.cache
+.env
+dist
+build/*.js
+src/assets
+public
+/**/*.d.ts
