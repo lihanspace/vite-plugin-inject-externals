@@ -1,5 +1,4 @@
 import { Plugin, UserConfig } from 'vite'
-// @ts-ignore
 import externalGlobals from 'rollup-plugin-external-globals'
 
 /**
@@ -38,10 +37,10 @@ export type HtmlTagDesc = HtmlTag & { injectTo?: OptionalInjectTo }
  * @property htmlTag HTML标签的描述信息，path属性会被覆盖 // Descriptor of an HTML tag, and the path attribute will be overwritten
  */
 export type InjectExternalsModule = {
-  name?: string,
-  global?: string,
-  path?: string,
-  htmlTag?: HtmlTag,
+  name?: string
+  global?: string
+  path?: string
+  htmlTag?: HtmlTag
   injectTo?: InjectTo
 }
 /**
@@ -59,7 +58,7 @@ export type ConfigEnvCommand = 'build' | true
  */
 export type InjectExternalsConfig = {
   command?: ConfigEnvCommand
-  injectTo?: InjectTo,
+  injectTo?: InjectTo
   modules: InjectExternalsModule[]
 }
 
@@ -74,16 +73,17 @@ const singleTags: Set<string> = new Set(['br', 'hr', 'img', 'input', 'param', 'm
  */
 const createTag = (htmlTag: HtmlTag) => {
   if (!htmlTag) return ''
-  let { tag, attrs } = htmlTag
+  const { tag } = htmlTag
+  let { attrs } = htmlTag
   if (!tag) return ''
   if (!attrs) attrs = {}
-  let htmlTagStr = `<${ tag }`
+  let htmlTagStr = `<${tag}`
   for (const attrsKey in attrs) {
-    htmlTagStr += ` ${ attrsKey }`
-    if (attrs[attrsKey] === false || attrs[attrsKey]) htmlTagStr += `="${ attrs[attrsKey] }"`
+    htmlTagStr += ` ${attrsKey}`
+    if (attrs[attrsKey] === false || attrs[attrsKey]) htmlTagStr += `="${attrs[attrsKey]}"`
   }
   htmlTagStr += `>`
-  if (!singleTags.has(tag)) htmlTagStr += `</${ tag }>`
+  if (!singleTags.has(tag)) htmlTagStr += `</${tag}>`
   return htmlTagStr
 }
 /**
@@ -106,8 +106,8 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       attrs: {
         type: 'text/javascript',
         src: moduleInfo.path,
-        crossorigin: ''
-      }
+        crossorigin: '',
+      },
     }
   } else {
     htmlTag = {
@@ -115,8 +115,8 @@ const initHtmlTag = (moduleInfo: InjectExternalsModule & { injectTo: string }): 
       attrs: {
         rel: 'stylesheet',
         href: moduleInfo.path,
-        crossorigin: ''
-      }
+        crossorigin: '',
+      },
     }
   }
   if (htmlTagInjectTo) htmlTag.injectTo = htmlTagInjectTo
@@ -130,18 +130,18 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
     modules = []
   }
   let canIInject = command === true
-  // Map<注入位置, HTML标签字符串数组>
-  let strTagsData: Map<string, string[]> = new Map<string, string[]>()
-  // 通过vite注入的HTML标签描述符数组
-  let htmlTags: HtmlTagDesc[] = []
-  // Record<模块名, 全局变量名>
-  let globalsOption: Record<string, string> = {}
-  // 自定义注入位置的模块数组
-  let customModules: (InjectExternalsModule & { injectTo: string })[] = []
-  // 通过vite注入的模块数组
-  let optionalModules: (InjectExternalsModule & { injectTo: OptionalInjectTo })[] = []
+  /** Map<注入位置, HTML标签字符串数组> */
+  const strTagsData: Map<string, string[]> = new Map<string, string[]>()
+  /** 通过vite注入的HTML标签描述符数组 */
+  const htmlTags: HtmlTagDesc[] = []
+  /** Record<模块名, 全局变量名> */
+  const globalsOption: Record<string, string> = {}
+  /** 自定义注入位置的模块数组 */
+  const customModules: (InjectExternalsModule & { injectTo: string })[] = []
+  /** 通过vite注入的模块数组 */
+  const optionalModules: (InjectExternalsModule & { injectTo: OptionalInjectTo })[] = []
   // 填充globalsOption 模块分类
-  for (let moduleItem of modules) {
+  for (const moduleItem of modules) {
     // 以裸导入(比如import './test.css')的方式导入资源，如果想要删除导入，global随便给个字符串值，不能是空值
     if (moduleItem.name) globalsOption[moduleItem.name] = moduleItem.global || 'noGlobal&deleteThisImport'
     // path和htmlTag都不存在，说明只需要删除导入和更换全区变量名，跳出循环
@@ -154,7 +154,7 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
     }
   }
   for (const customModule of customModules) {
-    let htmlTag = initHtmlTag(customModule)
+    const htmlTag = initHtmlTag(customModule)
     let htmlTagArr: string[]
     if (Array.isArray(strTagsData.get(customModule.injectTo))) {
       htmlTagArr = strTagsData.get(customModule.injectTo) as string[]
@@ -170,7 +170,7 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
     strTagsData.set(customModule.injectTo, htmlTagArr)
   }
   for (const optionalModule of optionalModules) {
-    let htmlTag = initHtmlTag(optionalModule)
+    const htmlTag = initHtmlTag(optionalModule)
     if (htmlTag.tag === 'link') {
       htmlTags.unshift(htmlTag)
     } else {
@@ -180,15 +180,13 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
   return {
     name: 'vite-plugin-inject-externals',
     config(uc, { command: viteCommand }) {
-      const userConfig: UserConfig = {
-        build: {
-          rollupOptions: {}
-        }
-      }
+      const userConfig: UserConfig = {}
       if (viteCommand === 'build') {
         canIInject = true
-        userConfig.build!.rollupOptions = {
-          plugins: [externalGlobals(globalsOption)]
+        userConfig.build = {
+          rollupOptions: {
+            plugins: [externalGlobals(globalsOption)],
+          },
         }
       }
       return userConfig
@@ -203,19 +201,19 @@ const injectExternals = (config: InjectExternalsConfig): Plugin => {
         val = val.substring(6, val.length - 1)
         spaceStr = val.replace(/\r/g, '').replace(/\n/g, '')
       }
-      let joinStr = spaceStr ? `\n${ spaceStr }` : '\n  '
+      const joinStr = spaceStr ? `\n${spaceStr}` : '\n  '
       for (const [key, strTagSet] of strTagsData) {
         newHtml = newHtml.replace(key, strTagSet.join(joinStr))
       }
       if (canIInject) {
         return {
           html: newHtml,
-          tags: htmlTags
+          tags: htmlTags,
         }
       } else {
         return html
       }
-    }
+    },
   }
 }
 export default injectExternals
