@@ -40,13 +40,13 @@
   },
   "homepage": "https://github.com/lihanspace/vite-plugin-inject-externals#readme",
   "devDependencies": {
-    "@types/node": "^16.18.25",
-    "tsup": "^6.7.0",
-    "typescript": "^4.5.4",
-    "vite": "^4.3.3"
+    "@types/node": "^20.3.1",
+    "tsup": "^7.1.0",
+    "typescript": "^5.1.3",
+    "vite": "^4.3.9"
   },
   "dependencies": {
-    "rollup-plugin-external-globals": "^0.7.3"
+    "rollup-plugin-external-globals": "^0.8.0"
   },
   "author": "LiHan <lihana@vip.qq.com> (https://lihan.space)",
   "license": "MIT"
